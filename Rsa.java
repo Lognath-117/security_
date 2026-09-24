@@ -1,63 +1,72 @@
 import java.math.BigInteger;
 import java.util.Scanner;
 
-public class DiffieHellman {
-
+public class RSA {
     public static void main(String[] args) {
 
         Scanner sc = new Scanner(System.in);
 
-        // Public values
+        // Input two prime numbers
+        System.out.print("Enter prime number p: ");
+        BigInteger p = sc.nextBigInteger();
+
         System.out.print("Enter prime number q: ");
         BigInteger q = sc.nextBigInteger();
 
-        System.out.print("Enter primitive root a: ");
-        BigInteger a = sc.nextBigInteger();
+        // Calculate n and phi
+        BigInteger n = p.multiply(q);
+        BigInteger phi = p.subtract(BigInteger.ONE)
+                          .multiply(q.subtract(BigInteger.ONE));
 
-        // Private keys
-        System.out.print("Enter private key of User A: ");
-        BigInteger privateA = sc.nextBigInteger();
+        System.out.println("n = " + n);
+        System.out.println("phi(n) = " + phi);
 
-        System.out.print("Enter private key of User B: ");
-        BigInteger privateB = sc.nextBigInteger();
+        // Input public exponent e
+        System.out.print("Enter public key e: ");
+        BigInteger e = sc.nextBigInteger();
 
-        // ---------------- USER A ----------------
+        // Calculate private key d
+        BigInteger d = e.modInverse(phi);
 
-        // Calculate public key of User A
-        BigInteger publicA = a.modPow(privateA, q);
+        System.out.println("Public Key  = (" + e + ", " + n + ")");
+        System.out.println("Private Key = (" + d + ", " + n + ")");
 
-        System.out.println("\n--- USER A ---");
-        System.out.println("Private Key A : " + privateA);
-        System.out.println("Public Key A  : " + publicA);
+        // Input message
+        sc.nextLine();
+        System.out.print("Enter message (as a number less than n): ");
+        BigInteger message = new BigInteger(sc.nextLine());
 
-        // ---------------- USER B ----------------
+        // ---------------- CONFIDENTIALITY ----------------
 
-        // Calculate public key of User B
-        BigInteger publicB = a.modPow(privateB, q);
+        // Encryption using public key
+        BigInteger encrypted = message.modPow(e, n);
 
-        System.out.println("\n--- USER B ---");
-        System.out.println("Private Key B : " + privateB);
-        System.out.println("Public Key B  : " + publicB);
+        System.out.println("\n--- CONFIDENTIALITY ---");
+        System.out.println("Original Message : " + message);
+        System.out.println("Encrypted Message: " + encrypted);
 
-        // ---------------- SECRET KEY ----------------
+        // Decryption using private key
+        BigInteger decrypted = encrypted.modPow(d, n);
 
-        // User A calculates shared secret
-        BigInteger secretA =
-                publicB.modPow(privateA, q);
+        System.out.println("Decrypted Message: " + decrypted);
 
-        // User B calculates shared secret
-        BigInteger secretB =
-                publicA.modPow(privateB, q);
+        // ---------------- AUTHENTICATION ----------------
 
-        System.out.println("\n--- SHARED SECRET ---");
-        System.out.println("Secret Key calculated by A: " + secretA);
-        System.out.println("Secret Key calculated by B: " + secretB);
+        // Digital signature using private key
+        BigInteger signature = message.modPow(d, n);
 
-        // Check whether both secret keys are equal
-        if (secretA.equals(secretB)) {
-            System.out.println("Key Exchange Successful!");
+        System.out.println("\n--- AUTHENTICATION ---");
+        System.out.println("Digital Signature: " + signature);
+
+        // Verify signature using public key
+        BigInteger verifiedMessage = signature.modPow(e, n);
+
+        System.out.println("Verified Message : " + verifiedMessage);
+
+        if (message.equals(verifiedMessage)) {
+            System.out.println("Authentication Successful!");
         } else {
-            System.out.println("Key Exchange Failed!");
+            System.out.println("Authentication Failed!");
         }
 
         sc.close();
